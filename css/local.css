@@ -1,0 +1,10 @@
+.dateChooser td {cursor:default;text-align:center;font-family:arial;font-size:11px;color:black; }
+.dateChooser td.dateChooserActive:hover {background:black;color:white;}
+.dateChooser td.dateChooserActiveToday {border: 2px solid red;}
+.dateChooser th {font-family:arial;font-size:11px;background: black; color: white;width: 19px;border: none;}
+.dateChooser option, .dateChooser select {font-size:10px;}
+.dateChooser {border: 1px outset black; background:white; padding: 1px;}
+.dateChooser table {text-align:right;border:2px solid green;background:black;}
+.currency {text-align:right;}
+i {background:red;}
+.r {text-align:right;}
