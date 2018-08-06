@@ -20,6 +20,24 @@ uncoded = c.fetchall()
 c.close()
 db.close()
 
+
+def makepagebigrams(txt):
+ newset = set()
+ pages = txt.split("\f")
+ lastword = ''
+ t = pages[0].split()
+ wdset = filter(lambda x:len(x)>=5 and not(re.search('\d+',x)),t[0:20]+t[-20:])
+ for w in wdset:
+  newset.add('1_'+lastword+"_"+w)
+  lastword = w
+ lastword = ''
+ t = pages[1].split()
+ wdset = filter(lambda x:len(x)>=5 and not(re.search('\d+',x)),t[0:20]+t[-20:])
+ for w in wdset:
+  newset.add('2_'+lastword+"_"+w)
+  lastword = w
+ return newset
+
 def makebigrams(pdftext):
  wins = 0
  words = pdftext.split()[0:80]
@@ -229,9 +247,6 @@ def stamppo():
  c.close()
  db.close()
 
-
-
-
 def stamptaxdates():
  db = pymysql.connect(host='127.0.0.1',user='root',password='password',db='docs')
  c = db.cursor()
@@ -313,7 +328,6 @@ def stampvat():
  c.close()
  db.close()
 
-
 def stampgoods():
  db = pymysql.connect(host='127.0.0.1',user='root',password='password',db='docs')
  c = db.cursor()
@@ -341,14 +355,51 @@ def stampgoods():
  c.close()
  db.close()
 
+def stampsplits():
+ db = pymysql.connect(host='127.0.0.1',user='root',password='password',db='docs')
+ c = db.cursor()
+ e = c.execute("select itemid,textfromfile from apdocs where pageto>pagefrom and pageto is not null")
+ dontsplit = c.fetchall()
+ e = c.execute("SELECT a.itemid,b.itemid,a.textfromfile,b.textfromfile FROM apdocs a, apdocs b WHERE a.emailuid = b.emailuid AND b.itemid > a.itemid and a.textfromfile is not null and b.textfromfile is not null")
+ dosplit = c.fetchall()
+ e = c.execute("select itemid,textfromfile,pages,filename from apdocs where pages > 1 and pageto is null and textfromfile is not null")
+ unsplit = c.fetchall()
 
-dic,lastrec = makefeatdic()
+ splitcorpus = {}
+ for rec in dontsplit:
+  for p in range(0,len(rec[1].split("\f"))-1):
+   s = makepagebigrams(rec[1].split("\f")[p]+"\f"+rec[1].split("\f")[p+1])
+   for w in s:
+    splitcorpus.setdefault(w,set()).add('dontsplit')
+ for rec in dosplit:
+  pages = rec[2].split("\f")[-1]+"\f"+rec[3].split("\f")[0]
+  s = makepagebigrams(pages)
+  for w in s:
+   splitcorpus.setdefault(w,set()).add('split')
 
-classcorpus = makeclasscorpus()
-stampclass(classcorpus)
-stampinvoiceno()
-stamppo()
-stamptaxdates()
-stamptotals()
-stampvat()
-stampgoods()
+ for rec in unsplit:
+  ps = []
+  for p in range(0,len(rec[1].split("\f"))-1):
+   s = makepagebigrams(rec[1].split("\f")[p]+"\f"+rec[1].split("\f")[p+1])
+   ans,li = guessclass(s,splitcorpus)
+   if ans == 'split':
+    ps.append(p+1)
+  sql = "update apdocs set otherjson=JSON_SET(otherjson,'$.ps',JSON_ARRAY("+','.join(map(str,ps))+")) where itemid = '"+str(rec[0])+"'"
+  print(sql)
+  a = c.execute(sql)
+  db.commit()
+ c.close()
+ db.close()
+
+
+stampsplits()
+
+#dic,lastrec = makefeatdic()
+#classcorpus = makeclasscorpus()
+#stampclass(classcorpus)
+#stampinvoiceno()
+#stamppo()
+#stamptaxdates()
+#stamptotals()
+#stampvat()
+#stampgoods()

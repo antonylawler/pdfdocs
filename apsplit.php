@@ -19,7 +19,7 @@
 </html>
 <?php
  $dblink = new mysqli("127.0.0.1","root","password","docs");
- $stmt = "select * from apdocs where pages > 1 and topage = pages and pagefrom is null order by rand() limit 10";
+ $stmt = "select * from apdocs where pages > 1 and pagefrom is null order by rand() limit 10";
  $results = array();
  $result = mysqli_query($dblink,$stmt);
  if ($result) {while($row = mysqli_fetch_row($result)) $results[]=$row;}
@@ -37,6 +37,7 @@ function showpdf(id) {
  
  obj = j[id];
  if (pagesets == null) pagesets = JSON.parse(obj[23]).ps;
+console.log(typeof(pagesets));
  if (pagesets == null) pagesets = [];
  
  document.getElementById('count').innerHTML = 'Showing '+(id+1)+' of '+j.length+" Pages to split:"+obj[6];

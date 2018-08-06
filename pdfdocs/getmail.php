@@ -9,6 +9,7 @@ function getallmail($server,$user,$pwd) {
  if ($msglist) {
   foreach ($msglist as $mid) {
    $h = imap_headerinfo($mbox, $mid);
+   if (sizeof(gotmessage(@$h->message_id))>0) continue;
    $s = imap_fetchstructure($mbox, $mid);
    if (property_exists($s,'parts')) {
     foreach ($s->parts as $partno => $p) getpart($mbox, $mid, $p, $partno + 1,$h,$s);
@@ -18,6 +19,17 @@ function getallmail($server,$user,$pwd) {
   }
  } // Check Msglist
  imap_close($mbox); 
+}
+
+function gotmessage($mid) {
+ $stmt = "select itemid from apdocs where emailuid = '$mid'";
+ $dblink  = getconn();
+ $results = [];
+ $result  = mysqli_query($dblink,$stmt);
+ if ($result) {while($row = mysqli_fetch_row($result)){$results[]=$row;}}
+ mysqli_close($dblink); 
+ return $results;
+
 }
 
 function getpart($mbox, $mid, $p, $partno,$h,$s) {
@@ -47,7 +59,6 @@ function getpart($mbox, $mid, $p, $partno,$h,$s) {
  }
 }
 
-
 function getcounter($type,$section) {
  $dblink = getconn();
  $comm   = "call uniqueid('".$type."','".$section."')";
@@ -63,7 +74,7 @@ function getconn() {
 }
 
 function dbinsert($name,$emailuid,$fname) {
- $stmt   = "insert into apdocs (itemid,name,editversion,editdate,editby,EmailUID,filename) values (0,'$name',1,sysdate(),'bot','$emailuid','$fname')";
+ $stmt   = "insert into apdocs (itemid,name,editversion,editdate,editby,EmailUID,filename,otherjson) values (0,'$name',1,sysdate(),'bot','$emailuid','$fname','{}')";
  $dblink = getconn();
  $result = mysqli_query($dblink,$stmt);
  mysqli_close($dblink);
@@ -124,12 +135,13 @@ function respfromxml() {
  $width    = $words['width']*1;
  $height   = $words['height']*1;
  $allwords = [];$tposwords = [];$poswords = [];
- foreach($words->children() as $word=>$w) {
-  $v           = [$w['yMin']*1000+$w['xMin']*1,$w['xMin']*1,$w['yMin']*1,$w['xMax']*1,$w['yMax']*1,$w[0].""];
-  $tposwords[] = $v;
+ if (isset($words)) {
+  foreach($words->children() as $word=>$w) {
+   $v           = [$w['yMin']*1000+$w['xMin']*1,$w['xMin']*1,$w['yMin']*1,$w['xMax']*1,$w['yMax']*1,$w[0].""];
+   $tposwords[] = $v;
+  }
  }
  asort($tposwords);
- 
  foreach ($tposwords as $vid=>$w) {
   $allwords[] = $w[5]."";
   $poswords[] = [$w[1],$w[2],$w[3],$w[4],trim($w[5])];
