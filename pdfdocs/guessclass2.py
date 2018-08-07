@@ -110,9 +110,9 @@ def makefeatdic():
  for rec in precoded:  
   if rec[13] == 'C' or rec[13] == 'I':
    text = rec[9]
-   supplierid = str(rec[12])
+   dicid = str(rec[12])+'|'+rec[13]
    splittext = text.split()
-   lastrec[supplierid+' '+rec[13]] = splittext
+   lastrec[dicid] = splittext
    splittextlength = len(splittext)
    # invoice purchaseorder taxdate goods vat total
    json23 = json.loads(rec[23])
@@ -136,12 +136,9 @@ def makefeatdic():
       anchorpos = targetpos+v+((v>0)*targetfeaturelength)
       if anchorpos >= 0 and anchorpos < splittextlength:
        word = splittext[anchorpos]
-       if re.search('\\d',word):
-        continue
-       key = supplierid+' '+word+' '+str(v)+' '+str(featureid)
-       dic.add(key)
-       key = word+' '+str(v)+' '+str(featureid)
-       gendic.add(key)
+       if not(re.search('\\d',word)):
+        dic.add(dicid+'|'+word+'|'+str(v)+'|'+targetfeaturelength+'|'+str(featureid))
+        gendic.add(word+'|'+str(v)+'|'+targetfeaturelength+'|'+str(featureid))
  return dic,lastrec
 
 def datecandidates(rec):
