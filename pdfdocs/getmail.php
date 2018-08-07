@@ -1,6 +1,6 @@
 <?php
-$server = "{mail.aquatecplumbingsupplies.co.uk:143/imap/novalidate-cert/norsh/notls/readonly}Inbox" ;
-getallmail($server,'invoices@aquatecplumbingsupplies.co.uk','bronte1234');
+//$server = "{mail.aquatecplumbingsupplies.co.uk:143/imap/novalidate-cert/norsh/notls/readonly}Inbox" ;
+//getallmail($server,'invoices@aquatecplumbingsupplies.co.uk','bronte1234');
 getemailtext();
 
 function getallmail($server,$user,$pwd) {
@@ -106,6 +106,7 @@ function getemailtext() {
    exec("qpdf --decrypt --linearize --empty --pages $fname $p -- WORK.PDF");
    exec("pdftotext -bbox -nopgbrk WORK.PDF work.xml");
    list($allwords,$width,$height,$poswords) = respfromxml();
+   $allwords = ''; exec("pdftotext -layout -nopgbrk WORK.PDF -",$allwords); $allwords = implode(' ',$allwords);
    preg_match_all("|[a-zA-Z]{3,100}|",$allwords,$ans);
    $jpgname = explode('.',$fname);
    $jpgname = "images/".$jpgname[0]."_".$p;
@@ -115,13 +116,14 @@ function getemailtext() {
     exec("tesseract $jpgname.jpg -c tessedit_char_whitelist=\"@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$&*()-=+:;<>?/,.\" WORK pdf");
     exec("pdftotext -bbox -nopgbrk WORK.PDF work.xml");
     list($scanwords,$width,$height,$scanposwords) = respfromxml();
+    $scanwords = ''; exec("pdftotext -layout -nopgbrk WORK.PDF -",$scanwords); $scanwords = implode(' ',$scanwords);
     preg_match_all("|[a-zA-Z]{5,100}|",$scanwords,$ans);
     if (sizeof($ans[0]) > 10) {$allwords = $scanwords;$scanned = 'Y';$poswords=$scanposwords;}
    }
    $text[$p-1] = str_replace(array("'","\f"),'',$allwords);
    $textpos[$p-1] = [$poswords,$width,$height];
   }
-  $textfromfile = implode("\f",$text);
+  $textfromfile = implode("\f",preg_replace('/\s+/',' ',$text));
   $textinfo = json_encode($textpos);
 
   $stmt->execute();

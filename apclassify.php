@@ -9,7 +9,7 @@
 </style>
 <?php
  $dblink = new mysqli("127.0.0.1","root","password","docs");
- $stmt     = "select * from apdocs where posted is null order by supplierid desc,doctype limit 10";
+ $stmt     = "select * from apdocs where posted is null order by itemid desc limit 10";
  $wordset  = array();
  $result   = mysqli_query($dblink,$stmt);
  while($row = mysqli_fetch_row($result)) {$docs[]=$row;}
@@ -496,7 +496,7 @@ function nextdoc() {
 function showvalues() {
  document.getElementById('recid').innerHTML = docs[currentdoc][0] + ' '+ docs[currentdoc][10] + ' ' + docs[currentdoc][11];
  var t = document.getElementById('rc_'+docs[currentdoc][13]);
- if (t) t.checked = 'true';
+ if (t) {t.checked = 'true';t.click()}
  document.getElementById('f_12').value = docs[currentdoc][12];
  document.getElementById('f_15').value = JSON.parse(docs[currentdoc][23])['f_15'];
  document.getElementById('f_16').value = JSON.parse(docs[currentdoc][23])['f_16'];
@@ -543,10 +543,10 @@ Need to sort out some of the colouring
 Need to store the occurence level of items clicked when there is more than one.
 Optionally
 - Restrict which items are highlighted on a field by field basis
-- Fix multi page problems
 - Address the issue with supplier 90407 and repeating extracted values.
 Recommend a common class for other. (Terms and conditions etc)
 - Need to sort out Barwick nad other illegibles.
+- Numeric extraction is still hopelessly poor. It has to do with 0.00 being equal to nothing.
 */
 
 </script>

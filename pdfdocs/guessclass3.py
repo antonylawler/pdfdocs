@@ -7,17 +7,17 @@ rx = []
 rx.append("\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]{0,6}(-|\\/| |,){1,2}(0|1|2|3)?[0-9](st|nd|rd|th)?(-|\\/| |,){1,2}(19|20)?(16|17|18|19)\\b")
 rx.append("\\b(0|1|2|3)?\\d(st|nd|rd|th)?(-|\\/| |,){1,2}(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]{0,6}(st|nd|rd|th)?(-|\\/| |,){1,2}(19|20)?(16|17|18|19)\\b")
 rx.append("\\b(0|1|2|3)?\\d ?(-|\\/|,|\\.){1,2} ?(0|1|2)? ?\\d ?(-|\\/|,|\\.){1,2} ?(19|20)?(16|17|18|19|20|21|22|23)\\b")
-vrange = (-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6)
+vrange = (-8,-7,-6,-5,-4,-3,-2,-1,1,2,3,4)
 dic = set()
 excludes = ['2016','2017','2018','2019','SP2','07152']
 
 db = pymysql.connect(host='127.0.0.1',user='root',password='password',db='docs')
 c = db.cursor()
 
-e = c.execute("select * from apdocs where posted is not null order by editdate")
+e = c.execute("select * from apdocs where posted is not null and supplierid = '61215' order by editdate")
 precoded = c.fetchall()
 
-e = c.execute("select * from apdocs where posted is null")
+e = c.execute("select * from apdocs where posted is null and itemid = 538804")
 
 uncoded = c.fetchall()
 
@@ -44,7 +44,7 @@ def makepagebigrams(txt):
 
 def makebigrams(pdftext):
  wins = 0
- words = pdftext.split()[0:80]
+ words = pdftext.split()[0:120]
  lastword = ''
  wordset = set()
  for w in words:
@@ -132,14 +132,12 @@ def getallkeys(targetpos,targetlength,splittextlength,splittext):
    offsetword = splittext[anchorpos]
    if not(re.match('.*\\d.*',offsetword)):
     k = offsetword+'|'+str(targetlength)+'|'+str(v)
-#    allkeys.add(k)
     allkeys[k] = allkeys[k]+1 if k in allkeys else 1
  return allkeys
 
 def makefeatdic():
  dic = {}
  lastrec = {}
- maxp = 10
  for rec in precoded:  
   if rec[13] == 'C' or rec[13] == 'I':
    text = rec[9]
@@ -150,6 +148,7 @@ def makefeatdic():
    # invoice purchaseorder taxdate goods vat total
    json23 = json.loads(rec[23])
    features = {15:rec[15],16:rec[16],17:json23.get('f_17',[[]])[0],18:json23.get('f_18',[[]])[0],19:json23.get('f_19',[[]])[0],20:json23.get('f_20',[[]])[0]}
+
    for featureid,targetfeature in features.items():
     if targetfeature is None:
      continue
@@ -158,14 +157,16 @@ def makefeatdic():
      continue
     targetlength = len(targetfeature.split())
     p = text.find(targetfeature,0)
-    pcount = 0
-    while p >= 0 and pcount < maxp:
+    while p >= 0:
+     tempx = len(text[:p+1].split())
+     print(p,targetfeature,tempx-1,targetlength,'b',splittext[tempx-1],splittext[tempx],splittext[tempx+1],rec[0])
      k = getallkeys(len(text[:p+1].split())-1,targetlength,splittextlength,splittext)
      for x in k:
       nk =dicid+'|'+str(featureid)+'|'+x 
       dic[nk] = dic[nk]+1 if nk in dic else 1
-
      p = text.find(targetfeature,p+1)
+# for v in dic:
+#  print(v,dic[v])
  return dic,lastrec
 
 def stampfeatures():
@@ -182,7 +183,7 @@ def stampfeatures():
   splittext = text.split()
   splittextlength = len(splittext)
   bests = {15:{},16:{},17:{},18:{},19:{},20:{}}
-  for targetlength in range(0,3):
+  for targetlength in range(0,4):
    for p in range(0,splittextlength-targetlength):
     poskeys = getallkeys(p,targetlength+1,splittextlength,splittext)
     targetword = ''.join(splittext[p:p+targetlength+1])
@@ -238,7 +239,7 @@ def stampfeatures():
     targetpos = int(best[0].split('|')[0])
     targetlength = int(best[0].split('|')[1])
     v = " ".join(splittext[targetpos:targetpos+targetlength])
-    sql = "update apdocs set otherjson=JSON_SET(otherjson,'$.f_15',\""+v+"\") where itemid = '"+str(rec[0])+"'"
+    sql = "update apdocs set otherjson=JSON_SET(otherjson,'$.f_"+str(b)+"',\""+v+"\") where itemid = '"+str(rec[0])+"'"
     a = c.execute(sql)
     db.commit()
 
