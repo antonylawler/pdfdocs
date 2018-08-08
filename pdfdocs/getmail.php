@@ -93,6 +93,7 @@ function getunpaged() {
 function getemailtext() {
  $list = getunpaged();
  foreach ($list as $listid=>$apdocsitem) {
+  print("Processing $listid\n");
   $conn = getconn();
   $stmt = $conn->prepare("update apdocs set pages=?, scanned=?, textfromfile=?,textinfo=? where itemid =?");
   $stmt->bind_param("sssss",$pages,$scanned,$textfromfile,$textinfo,$itemid);
@@ -109,8 +110,8 @@ function getemailtext() {
    $allwords = ''; exec("pdftotext -layout -nopgbrk WORK.PDF -",$allwords); $allwords = implode(' ',$allwords);
    preg_match_all("|[a-zA-Z]{3,100}|",$allwords,$ans);
    $jpgname = explode('.',$fname);
-   $jpgname = "images/".$jpgname[0]."_".$p;
-   exec("pdftocairo -jpeg -singlefile -r 300 WORK.PDF $jpgname");
+   $jpgname = "images/".$jpgname[0]."-".$p;
+   exec("pdftocairo -q -jpeg -singlefile -r 300 WORK.PDF $jpgname");
    $scanned = '';
    if (sizeof($ans[0]) < 6) {
     exec("tesseract $jpgname.jpg -c tessedit_char_whitelist=\"@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$&*()-=+:;<>?/,.\" WORK pdf");

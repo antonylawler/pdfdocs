@@ -14,11 +14,11 @@ excludes = ['2016','2017','2018','2019','SP2','07152']
 db = pymysql.connect(host='127.0.0.1',user='root',password='password',db='docs')
 c = db.cursor()
 
-e = c.execute("select * from apdocs where posted is not null and supplierid = '61215' order by editdate")
+#e = c.execute("select * from apdocs where posted is not null and supplierid = '21809' order by editdate")
+e = c.execute("select * from apdocs where posted is not null order by editdate")
 precoded = c.fetchall()
-
-e = c.execute("select * from apdocs where posted is null and itemid = 538804")
-
+#e = c.execute("select * from apdocs where posted is null and itemid = 538605")
+e = c.execute("select * from apdocs where posted is null")
 uncoded = c.fetchall()
 
 c.close()
@@ -123,7 +123,6 @@ def stampsplits():
  c.close()
  db.close()
 
-
 def getallkeys(targetpos,targetlength,splittextlength,splittext):
  allkeys = {}
  for v in vrange:
@@ -148,7 +147,6 @@ def makefeatdic():
    # invoice purchaseorder taxdate goods vat total
    json23 = json.loads(rec[23])
    features = {15:rec[15],16:rec[16],17:json23.get('f_17',[[]])[0],18:json23.get('f_18',[[]])[0],19:json23.get('f_19',[[]])[0],20:json23.get('f_20',[[]])[0]}
-
    for featureid,targetfeature in features.items():
     if targetfeature is None:
      continue
@@ -158,15 +156,11 @@ def makefeatdic():
     targetlength = len(targetfeature.split())
     p = text.find(targetfeature,0)
     while p >= 0:
-     tempx = len(text[:p+1].split())
-     print(p,targetfeature,tempx-1,targetlength,'b',splittext[tempx-1],splittext[tempx],splittext[tempx+1],rec[0])
      k = getallkeys(len(text[:p+1].split())-1,targetlength,splittextlength,splittext)
      for x in k:
       nk =dicid+'|'+str(featureid)+'|'+x 
       dic[nk] = dic[nk]+1 if nk in dic else 1
      p = text.find(targetfeature,p+1)
-# for v in dic:
-#  print(v,dic[v])
  return dic,lastrec
 
 def stampfeatures():
@@ -186,7 +180,7 @@ def stampfeatures():
   for targetlength in range(0,4):
    for p in range(0,splittextlength-targetlength):
     poskeys = getallkeys(p,targetlength+1,splittextlength,splittext)
-    targetword = ''.join(splittext[p:p+targetlength+1])
+    targetword = ' '.join(splittext[p:p+targetlength+1])
     targetkey = str(p)+'|'+str(targetlength+1)+'|'+targetword
     # Invoice No.
     if re.match('.*\\d.*',targetword):
@@ -209,19 +203,19 @@ def stampfeatures():
        cnt += dic[dicid+'|17|'+v] if dicid+'|17|'+v in dic else 0
       bests[17][targetkey] = cnt
     # Goods
-    if re.match('^.?\\d{0,3},?\\d{1,3}\.\\d\\d$',targetword):
+    if re.match('^.?.?\\d{0,3},?\\d{1,3}\.\\d\\d$',targetword):
      cnt = 0
      for v in poskeys:
       cnt += dic[dicid+'|18|'+v] if dicid+'|18|'+v in dic else 0
      bests[18][targetkey] = cnt
     # VAT
-    if re.match('^.?\\d{0,3},?\\d{1,3}\.\\d\\d$',targetword):
+    if re.match('^.?.?\\d{0,3},?\\d{1,3}\.\\d\\d$',targetword):
      cnt = 0
      for v in poskeys:
       cnt += dic[dicid+'|19|'+v] if dicid+'|19|'+v in dic else 0
      bests[19][targetkey] = cnt
     # Total
-    if re.match('^.?\\d{0,3},?\\d{1,3}\.\\d\\d$',targetword):
+    if re.match('^.?.?\\d{0,3},?\\d{1,3}\.\\d\\d$',targetword):
      cnt = 0
      for v in poskeys:
       cnt += dic[dicid+'|20|'+v] if dicid+'|20|'+v in dic else 0
@@ -260,7 +254,7 @@ def stampinvoiceno():
 #stampsplits()
 classcorpus = makeclasscorpus()
 dic,lastrec = makefeatdic()
+
 stampfeatures()
 
-
-#stampclass(classcorpus)
+#TODO. multi word dates are not getting picked up even with targetlength 3

@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <link rel="stylesheet" href="css/w3.css">
 <link rel="stylesheet" href="css/local.css">
 <script src="js/bpif.js"></script>
@@ -40,9 +39,9 @@
  <tr class='featline'><td class=h12 onclick=addnext()>Invoice No</td><td><input onfocus='currbox = this;' id='f_15' type=input><span></span></td></tr>
  <tr class='featline'><td class=h12 onclick=addnext()>Purchase Order</td><td><input onfocus='currbox = this;' id='f_16' type=input><span></span></td></tr>
  <tr class='featline'><td class=h12 onclick=addnext()>Tax Date</td><td><input onfocus='currbox = this;' id='f_17' type=input><span></span></td></tr>
- <tr class='featline'><td class=h12 onclick=addnext()>Goods</td><td><input onfocus='currbox = this;' id='f_18' type=input><span></span></td></tr>
- <tr class='featline'><td class=h12 onclick=addnext()>VAT</td><td><input onfocus='currbox = this;' id='f_19' type=input><span></span></td></tr>
- <tr class='featline'><td class=h12 onclick=addnext()>Total</td><td><input onfocus='currbox = this;' id='f_20' type=input><span></span></td></tr>
+ <tr class='featline'><td class=h12 onclick=addnext()>Goods</td><td><input style='text-align:right' onfocus='currbox = this;' id='f_18' type=input><span></span></td></tr>
+ <tr class='featline'><td class=h12 onclick=addnext()>VAT</td><td><input  style='text-align:right' onfocus='currbox = this;' id='f_19' type=input><span></span></td></tr>
+ <tr class='featline'><td class=h12 onclick=addnext()>Total</td><td><input  style='text-align:right' onfocus='currbox = this;' id='f_20' type=input><span></span></td></tr>
  <tr><td class=h12>Ignore Errors</td><td><input type='checkbox' id=ignore></td></tr>
  <tr><td class=h12>Pages</td><td id=pagelist></td></tr>
  <tr><td valign='top'><button  valign='top' accesskey='S' onclick='nextdoc()'>Done</button><button onclick=showpdf()>Show PDF</td></tr>
@@ -155,7 +154,7 @@ function loadimages() {
   for (var p = 0;p<docs[i][7];p++) {
    docs[i][24][p][0] = docs[i][24][p][0].sort(function(a,b) {return a[1]==b[1] ? a[0]-b[0] : a[1]-b[1]}) ;
    var img        = new Image();
-   var uid = 'pdfdocs/images/'+docs[i][6].split('.')[0]+'_'+(p+1)+'.jpg';
+   var uid = 'pdfdocs/images/'+docs[i][6].split('.')[0]+'-'+(p+1)+'.jpg';
    img.id = 'img_'+i+'_'+p;
    img.src = 'eng_fetchthumb.php?fname=pdfdocs/'+docs[i][6]+'&page='+p+'&resolution='+resolution;
    img.passerr = 'eng_fetchthumb.php?fname=pdfdocs/'+docs[i][6]+'&page='+p+'&resolution='+resolution;
@@ -452,7 +451,7 @@ function validateall() {
 }
 
 function writedone(resp) {
-// console.log(resp);
+ console.log(resp);
 }
 
 function writeit() {
@@ -507,6 +506,7 @@ function showvalues() {
  var p = decodeURI(localStorage.getItem('SUPPLIERLIST')).split('\x13')[0].split('\x12').indexOf(docs[currentdoc][12]);
  var w = decodeURI(localStorage.getItem('SUPPLIERLIST')).split('\x13')[1].split('\x12')[p];
  document.getElementById('f_12').nextSibling.innerText = w;
+ removesel();
 }
 function findall(txt,val) {
  if (val == "") return [] ;
