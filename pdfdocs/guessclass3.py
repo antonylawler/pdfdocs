@@ -203,19 +203,19 @@ def stampfeatures():
        cnt += dic[dicid+'|17|'+v] if dicid+'|17|'+v in dic else 0
       bests[17][targetkey] = cnt
     # Goods
-    if re.match('^.?.?\\d{0,3},?\\d{1,3}\.\\d\\d$',targetword):
+    if re.match('^.?.?.?\\d{0,3},?\\d{1,3}\.\\d\\d$',targetword):
      cnt = 0
      for v in poskeys:
       cnt += dic[dicid+'|18|'+v] if dicid+'|18|'+v in dic else 0
      bests[18][targetkey] = cnt
     # VAT
-    if re.match('^.?.?\\d{0,3},?\\d{1,3}\.\\d\\d$',targetword):
+    if re.match('^.?.?.?\\d{0,3},?\\d{1,3}\.\\d\\d$',targetword):
      cnt = 0
      for v in poskeys:
       cnt += dic[dicid+'|19|'+v] if dicid+'|19|'+v in dic else 0
      bests[19][targetkey] = cnt
     # Total
-    if re.match('^.?.?\\d{0,3},?\\d{1,3}\.\\d\\d$',targetword):
+    if re.match('^.?.?.?\\d{0,3},?\\d{1,3}\.\\d\\d$',targetword):
      cnt = 0
      for v in poskeys:
       cnt += dic[dicid+'|20|'+v] if dicid+'|20|'+v in dic else 0
@@ -257,4 +257,8 @@ dic,lastrec = makefeatdic()
 
 stampfeatures()
 
-#TODO. multi word dates are not getting picked up even with targetlength 3
+#TODO. On click of field, need to retain space into feature box.
+# Barwick not working
+# F & P Not being classified
+# Credit note and invoice value direction rules + and -
+# Two fields for goods for Bristan and also discount

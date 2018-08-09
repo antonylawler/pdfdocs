@@ -6,3 +6,6 @@ images/
 *.xml
 *.PDF
 *.JPG
+*.sql
+*.7z
+*.zip

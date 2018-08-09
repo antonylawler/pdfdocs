@@ -93,34 +93,39 @@ function getunpaged() {
 function getemailtext() {
  $list = getunpaged();
  foreach ($list as $listid=>$apdocsitem) {
-  print("Processing $listid\n");
+  print("Processing $apdocsitem[0]\n");
   $conn = getconn();
   $stmt = $conn->prepare("update apdocs set pages=?, scanned=?, textfromfile=?,textinfo=? where itemid =?");
   $stmt->bind_param("sssss",$pages,$scanned,$textfromfile,$textinfo,$itemid);
   $fname    = $apdocsitem[6];
   $itemid   = $apdocsitem[0];
-  $resp     = '';exec("qpdf --decrypt --linearize --show-npages $fname",$resp);
+  $resp     = '';exec("qpdf --decrypt --show-npages $fname",$resp);
   $pages    = $resp[0];
   $text     = array();
   $textpos  = array();
-  for ($p=1;$p<=$pages;$p++) {
+  if ($pages == 1) {
+   $pagefrom = 1;$pageto = 1;
+  } elseif ($apdocsitem[11] != '') {
+   $pagefrom = $apdocsitem[10];$pageto = $apdocsitem[11];
+  } else {
+   $pagefrom = 1;$pageto = $pages;
+  }
+  for ($p=$pagefrom;$p<=$pageto;$p++) {
    exec("qpdf --decrypt --linearize --empty --pages $fname $p -- WORK.PDF");
-   exec("pdftotext -bbox -nopgbrk WORK.PDF work.xml");
-   list($allwords,$width,$height,$poswords) = respfromxml();
+   $jpgname = explode('.',$fname); $jpgname = "images/".$jpgname[0]."-".$p;
+   exec("pdftocairo -q -jpeg -singlefile -r 300 WORK.PDF $jpgname");
+
    $allwords = ''; exec("pdftotext -layout -nopgbrk WORK.PDF -",$allwords); $allwords = implode(' ',$allwords);
    preg_match_all("|[a-zA-Z]{3,100}|",$allwords,$ans);
-   $jpgname = explode('.',$fname);
-   $jpgname = "images/".$jpgname[0]."-".$p;
-   exec("pdftocairo -q -jpeg -singlefile -r 300 WORK.PDF $jpgname");
+
    $scanned = '';
    if (sizeof($ans[0]) < 6) {
     exec("tesseract $jpgname.jpg -c tessedit_char_whitelist=\"@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$&*()-=+:;<>?/,.\" WORK pdf");
-    exec("pdftotext -bbox -nopgbrk WORK.PDF work.xml");
-    list($scanwords,$width,$height,$scanposwords) = respfromxml();
-    $scanwords = ''; exec("pdftotext -layout -nopgbrk WORK.PDF -",$scanwords); $scanwords = implode(' ',$scanwords);
-    preg_match_all("|[a-zA-Z]{5,100}|",$scanwords,$ans);
-    if (sizeof($ans[0]) > 10) {$allwords = $scanwords;$scanned = 'Y';$poswords=$scanposwords;}
+    $allwords = ''; exec("pdftotext -layout -nopgbrk WORK.PDF -",$allwords); $allwords = implode(' ',$allwords);
+    $scanned = 'Y';
    }
+   list($width,$height,$poswords) = respfromxml();
+
    $text[$p-1] = str_replace(array("'","\f"),'',$allwords);
    $textpos[$p-1] = [$poswords,$width,$height];
   }
@@ -131,9 +136,13 @@ function getemailtext() {
  }
 
 }
-
 function respfromxml() {
- $xml=simplexml_load_file("work.xml") ;
+ $ans = '';exec("pdftotext -bbox -nopgbrk WORK.PDF -" ,$ans);
+ $ans = utf8_for_xml(implode("\n",$ans));
+ $dom = new DOMDocument;
+ $dom->loadXML($ans);
+ if (!$dom) {echo "Could not parse";}
+ $xml      = simplexml_import_dom($dom);
  $words    = $xml->body->doc->page;
  $width    = $words['width']*1;
  $height   = $words['height']*1;
@@ -149,6 +158,7 @@ function respfromxml() {
   $allwords[] = $w[5]."";
   $poswords[] = [$w[1],$w[2],$w[3],$w[4],trim($w[5])];
  }
- return array(implode(' ',$allwords),$width,$height,$poswords);
+ return array($width,$height,$poswords);
 }
+function utf8_for_xml($string) {return preg_replace ('/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', ' ', $string);}
 ?>

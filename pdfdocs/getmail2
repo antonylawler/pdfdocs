@@ -81,7 +81,7 @@ function dbinsert($name,$emailuid,$fname) {
 }
 
 function getunpaged() {
- $stmt    = "select * from apdocs where itemid = 538600";
+ $stmt    = "select * from apdocs";
  $dblink  = getconn();
  $results = [];
  $result  = mysqli_query($dblink,$stmt);
@@ -116,13 +116,10 @@ function getemailtext() {
    exec("pdftocairo -q -jpeg -singlefile -r 300 WORK.PDF $jpgname");
 
    $allwords = ''; exec("pdftotext -layout -nopgbrk WORK.PDF -",$allwords); $allwords = implode(' ',$allwords);
-print("qpdf --decrypt --linearize --empty --pages $fname $p -- WORK.PDF");	
    preg_match_all("|[a-zA-Z]{3,100}|",$allwords,$ans);
-print("The size is ".sizeof($ans[0]));
 
    $scanned = '';
    if (sizeof($ans[0]) < 6) {
-print("And now the size is ".sizeof($ans[0]));
     exec("tesseract $jpgname.jpg -c tessedit_char_whitelist=\"@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$&*()-=+:;<>?/,.\" WORK pdf");
     $allwords = ''; exec("pdftotext -layout -nopgbrk WORK.PDF -",$allwords); $allwords = implode(' ',$allwords);
     $scanned = 'Y';
@@ -141,13 +138,8 @@ print("And now the size is ".sizeof($ans[0]));
 }
 
 function respfromxml() {
- $ans = '';exec("pdftotext -bbox -nopgbrk WORK.PDF -" ,$ans);
- $ans = utf8_for_xml(implode("\n",$ans));
- echo($ans);
- $dom = new DOMDocument;
- $dom->loadXML($ans);
- if (!$dom) {echo "Could not parse";}
- $xml      = simplexml_import_dom($dom);
+ exec("pdftotext -bbox -nopgbrk WORK.PDF work.xml");
+ $xml      = simplexml_load_file("work.xml") ;
  $words    = $xml->body->doc->page;
  $width    = $words['width']*1;
  $height   = $words['height']*1;
@@ -165,5 +157,4 @@ function respfromxml() {
  }
  return array($width,$height,$poswords);
 }
-function utf8_for_xml($string) {return preg_replace ('/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', ' ', $string);}
 ?>

@@ -160,7 +160,7 @@ function loadimages() {
    img.passerr = 'eng_fetchthumb.php?fname=pdfdocs/'+docs[i][6]+'&page='+p+'&resolution='+resolution;
    img.onerror = function() {this.src = this.passerr;};
    images[img.id] = img;
-   if (img.id == 'img_0_0') {    
+   if (img.id == 'img_0_0') {
     showimage();
     highlightwords();
    }
@@ -171,10 +171,12 @@ function loadimages() {
 function listpages() {
  pl = document.getElementById('pagelist');
  pl.innerHTML = '';
- for (var p = docs[currentdoc][10]-1;p<docs[currentdoc][11];p++) {
+ if (docs[currentdoc][10] == null) {docs[currentdoc][10] = 1; docs[currentdoc][11] = 1; }
+
+ for (var p = docs[currentdoc][10]*1;p<=docs[currentdoc][11]*1;p++) {
   b = document.createElement('button');
   if (currentpage == p) {b.style.backgroundColor = 'white';}
-  b.innerText = p+1;
+  b.innerText = p;
   b.onclick=function() {
    currentpage=this.innerText*1-1;
    showimage();
@@ -210,6 +212,8 @@ function ajaxcall(url,req,callback) {
 function showimage() {
  cutl           = 0;
  cutt           = 0;
+ if (docs[currentdoc][24][currentpage][2] == 0) docs[currentdoc][24][currentpage][2] = 841;
+ if (docs[currentdoc][24][currentpage][1] == 0) docs[currentdoc][24][currentpage][1] = 595;
  ratio          = docs[currentdoc][24][currentpage][2]/docs[currentdoc][24][currentpage][1];
  dw             = Math.min(window.innerWidth-500,window.innerHeight/ratio-10);
  ims            = images['img_'+currentdoc+'_'+currentpage].style;
@@ -233,7 +237,7 @@ function highlightwords() {
 
  words = docs[currentdoc][24][currentpage][0];
 
- for (i=0;i<words.length;i++) { 
+ for (i=0;i<words.length;i++) {
   w = words[i];
   if (w[0]*sw+cutl<dw && w[1]*sw+cutt<dw*ratio && w[0]*sw+cutl>0) {
   currelement                  = document.createElement('div');
@@ -255,6 +259,8 @@ function highlightwords() {
    currelement.style.background = 'yellow';
   } else if (w[4].match(/\d/)) {
    currelement.style.background = 'green';
+  } else {
+   continue;
   }
 
   currelement.onclick = function() {
@@ -293,7 +299,7 @@ function highlightwords() {
    } else if (currbox.id == 'f_19') { document.getElementById('f_20').focus();
    }
   }
-  document.getElementById('divid').appendChild(currelement);
+   document.getElementById('divid').appendChild(currelement);
   }
  }
 }
@@ -547,6 +553,7 @@ Optionally
 Recommend a common class for other. (Terms and conditions etc)
 - Need to sort out Barwick nad other illegibles.
 - Numeric extraction is still hopelessly poor. It has to do with 0.00 being equal to nothing.
+- Improve purchase order recognition for text only elements
 */
 
 </script>
