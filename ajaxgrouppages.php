@@ -45,13 +45,14 @@ function deleteit($itemid) {
  $stmt = "delete from apdocs where itemid = ".$itemid;
  $result = mysqli_query($conn,$stmt);
  mysqli_close($conn);
+ echo ($stmt);
 }
 
 function writeit($newdocsitem) {
  $newdocsitem[11] = $newdocsitem[10]-1+sizeof($newdocsitem[9]);
  $newdocsitem[9]  = implode("\f",$newdocsitem[9]);
  $newdocsitem[0]  = 0;
- $newdocsitem[1]  = 'Paged';
+ $newdocsitem[1]  = $newdocsitem[1].' Paged';
  $newdocsitem[24] = json_encode($newdocsitem[24]);
  $conn = new mysqli("127.0.0.1","root","password","docs");
 

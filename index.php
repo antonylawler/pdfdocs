@@ -50,7 +50,9 @@ var menu = {
   ['SHOW.PROSPECT','showprospect.php','Show prospect tree'],
   ['SHOW.PROSPECTTABLE','showprospecttable.php','Show prospect table'],
   ['ENG.AUDIT.DISCOUNT','showdiscountaudit.php','Show discount audit'],
-  ['HTMLSTATEMENT','showstatement.php?THISPROG=HTMLSTATEMENT','Customer Statement']
+  ['HTMLSTATEMENT','showstatement.php?THISPROG=HTMLSTATEMENT','Customer Statement'],
+  ['SHOW.EDI.ERRORS','flatcallnoselect.php?THISPROG=SHOW.EDI.ERRORS','Show EDI Errors'],
+  ['SHOW.PLEDGER.QUEUE','flatcallnoselect.php?THISPROG=SHOW.PLEDGER.QUEUE','Show what is currently in the purchase invoice queue']
  ]
 }
 

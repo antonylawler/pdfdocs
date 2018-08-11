@@ -7,17 +7,22 @@
  h1 {color:white;}
 </style>
 <?php
- $dblink = new mysqli("127.0.0.1","root","password","docs");
+ error_reporting(E_ALL);
+ini_set('display_errors', 1);
+  $dblink = new mysqli("127.0.0.1","root","password","docs");
  $stmt     = "select * from apdocs where posted is null order by itemid desc limit 10";
  $wordset  = array();
  $result   = mysqli_query($dblink,$stmt);
+ $docs = array();
  while($row = mysqli_fetch_row($result)) {$docs[]=$row;}
+// while($row = mysqli_fetch_row($result)) {$row[23] = mb_convert_encoding($row[23],'UTF-8'); $docs[]=$row;}
  mysqli_close($dblink);
 ?>
 <head>
  <title>Classifier</title>
 </head>
 <body style='background:black'>
+<input id=editable type=hidden>
 <div id=features style='float:left' class='w3-small w3-black'>
  <table style='width:100%;border-collapse: collapse;'>
  <tr><th width='180px'></th><th width='300px'></th><th></th></tr>
@@ -35,7 +40,7 @@
    </div>
   </td>
  </tr>
- <tr class='suppline'><td class=h12>Supplier</td><td><input class='search' name='SUPPLIERLIST' id='f_12'><span style='font-size:8px'></span></td></tr>
+ <tr class='suppline'><td class=h12>Supplier</td><td><input class='search' name='WEBINPUT.SUPPLIER' id='f_12'><span style='font-size:8px'></span></td></tr>
  <tr class='featline'><td class=h12 onclick=addnext()>Invoice No</td><td><input onfocus='currbox = this;' id='f_15' type=input><span></span></td></tr>
  <tr class='featline'><td class=h12 onclick=addnext()>Purchase Order</td><td><input onfocus='currbox = this;' id='f_16' type=input><span></span></td></tr>
  <tr class='featline'><td class=h12 onclick=addnext()>Tax Date</td><td><input onfocus='currbox = this;' id='f_17' type=input><span></span></td></tr>
@@ -44,7 +49,7 @@
  <tr class='featline'><td class=h12 onclick=addnext()>Total</td><td><input  style='text-align:right' onfocus='currbox = this;' id='f_20' type=input><span></span></td></tr>
  <tr><td class=h12>Ignore Errors</td><td><input type='checkbox' id=ignore></td></tr>
  <tr><td class=h12>Pages</td><td id=pagelist></td></tr>
- <tr><td valign='top'><button  valign='top' accesskey='S' onclick='nextdoc()'>Done</button><button onclick=showpdf()>Show PDF</td></tr>
+ <tr><td valign='top'><button  valign='top' accesskey='S' onclick='dowrite()'>Done</button><button onclick=showpdf()>Show PDF</td></tr>
  </table>
 </div>
 </body>
@@ -131,7 +136,7 @@ function setmousexy() {
  event.pageY ? mousey = event.pageY : mousey = event.clientY ;// mousey += document.documentElement.scrollTop;
 }
 function addsuppliers(resp) {
- // After loading the suppliers.txt file.
+ // After loading the suppliers.txt file. Not needed if we can get a list direct.
  var l = resp.split('\x0A');
  ids = [];
  descs = [];
@@ -142,7 +147,6 @@ function addsuppliers(resp) {
  }
  recs = ids.join('\x12')+'\x13'+descs.join('\x12');
  storecachetable(['','','SUPPLIERLIST',recs]);
- loadimages();
 }
 
 function loadimages() {
@@ -151,13 +155,13 @@ function loadimages() {
  resolution = 360;
  for (var i = 0; i < docs.length; i++) {
   docs[i][24] = JSON.parse(docs[i][24]);
-  for (var p = 0;p<docs[i][7];p++) {
+  for (var p = 0;p<=docs[i][11]-docs[i][10];p++) {
    docs[i][24][p][0] = docs[i][24][p][0].sort(function(a,b) {return a[1]==b[1] ? a[0]-b[0] : a[1]-b[1]}) ;
    var img        = new Image();
    var uid = 'pdfdocs/images/'+docs[i][6].split('.')[0]+'-'+(p+1)+'.jpg';
    img.id = 'img_'+i+'_'+p;
-   img.src = 'eng_fetchthumb.php?fname=pdfdocs/'+docs[i][6]+'&page='+p+'&resolution='+resolution;
-   img.passerr = 'eng_fetchthumb.php?fname=pdfdocs/'+docs[i][6]+'&page='+p+'&resolution='+resolution;
+   img.src = 'eng_fetchthumb.php?fname=pdfdocs/'+docs[i][6]+'&page='+(p+docs[i][10]*1-1)+'&resolution='+resolution;
+   img.passerr = 'eng_fetchthumb.php?fname=pdfdocs/'+docs[i][6]+'&page='+(p+docs[i][10]-1)+'&resolution='+resolution;
    img.onerror = function() {this.src = this.passerr;};
    images[img.id] = img;
    if (img.id == 'img_0_0') {
@@ -166,6 +170,7 @@ function loadimages() {
    }
   }
  }
+ nextdoc();
 }
 
 function listpages() {
@@ -178,7 +183,7 @@ function listpages() {
   if (currentpage == p) {b.style.backgroundColor = 'white';}
   b.innerText = p;
   b.onclick=function() {
-   currentpage=this.innerText*1-1;
+   currentpage=this.innerText*1-docs[currentdoc][10];
    showimage();
    dozoomin(event);
    listpages();   
@@ -466,22 +471,19 @@ function writeit() {
  ajaxcall(url,req,writedone);
 }
 
-function nextdoc() { 
-//console.log("Calling validator");
+function dowrite() {
  if (!validateall()) return;
-//console.log("Writing it");
  writeit();
-//console.log("Written it");
-
  currentdoc += 1;
+ nextdoc();
+}
+function nextdoc() { 
  if (currentdoc >= docs.length) {
   document.body.innerHTML = '<h1>No more to show</h1>';
  } else {
-  currentpage    = 0;
   currbox        = document.getElementById('f_12');
   cutl           = 0;
   cutt           = 0;
-  zoomby         = 1.25;
   zoomlevel      = 0;
   dragging       = false;
   zoomlevel      = 0;
@@ -496,6 +498,7 @@ function nextdoc() {
   for (el=0;el<elements.length;el++) elements[el].childNodes[1].childNodes[1].innerText = '';
   invoiceselected();
   showvalues();
+  document.getElementById('f_12').focus();
  }
 }
 function showvalues() {
@@ -522,38 +525,29 @@ function findall(txt,val) {
  while ((p = txt.indexOf(val,pos)) != -1) {pos = p+1;finds.push(p);}
  return finds;
 }
-currbox        = document.getElementById('f_12');
-cutl           = 0;
-cutt           = 0;
 currentdoc     = 0;
 currentpage    = 0;
-dw             = 450;
 zoomby         = 1.25;
 zoomlevel      = 0;
+dw             = 450;
 dragging       = false;
-zoomlevel      = 0;
-mousex         = 0;
-mousey         = 0;
 docs           = <?php echo(json_encode($docs));?>;
-ajaxcall('SUPPLIER.TXT','',addsuppliers);
-marksearch();
-listpages();
-showvalues();
-document.getElementById('f_12').focus();
-//q = decodeURI(localStorage.getItem('SUPPLIERLIST')).split('\x13')[0].split('\x12');
+loadimages();
+attachevents();
+
+
+//ajaxcall('SUPPLIER.TXT','',addsuppliers);
 
 /*
-TODO Need to have a more sensible start if no items selected
 Need an option to skip if failed write
 Need to sort out some of the colouring
 Need to store the occurence level of items clicked when there is more than one.
 Optionally
 - Restrict which items are highlighted on a field by field basis
-- Address the issue with supplier 90407 and repeating extracted values.
 Recommend a common class for other. (Terms and conditions etc)
-- Need to sort out Barwick nad other illegibles.
-- Numeric extraction is still hopelessly poor. It has to do with 0.00 being equal to nothing.
-- Improve purchase order recognition for text only elements
+- Nicer interface
+- Flow diagram of work and documentation
+- Clear down of old jpgs.
 */
 
 </script>

@@ -1,6 +1,6 @@
 <?php
-//$server = "{mail.aquatecplumbingsupplies.co.uk:143/imap/novalidate-cert/norsh/notls/readonly}Inbox" ;
-//getallmail($server,'invoices@aquatecplumbingsupplies.co.uk','bronte1234');
+$server = "{mail.aquatecplumbingsupplies.co.uk:143/imap/novalidate-cert/norsh/notls/readonly}Inbox" ;
+getallmail($server,'invoices@aquatecplumbingsupplies.co.uk','bronte1234');
 getemailtext();
 
 function getallmail($server,$user,$pwd) {
@@ -81,7 +81,7 @@ function dbinsert($name,$emailuid,$fname) {
 }
 
 function getunpaged() {
- $stmt    = "select * from apdocs";
+ $stmt    = "select * from apdocs where pages is null";
  $dblink  = getconn();
  $results = [];
  $result  = mysqli_query($dblink,$stmt);
@@ -133,8 +133,11 @@ function getemailtext() {
   $textinfo = json_encode($textpos);
 
   $stmt->execute();
+  mysqli_close($conn);
  }
-
+ $conn = getconn();
+ $result = mysqli_query($conn,"update apdocs set pagefrom=1,pageto=1 where pages =1");
+ mysqli_close($conn);
 }
 function respfromxml() {
  $ans = '';exec("pdftotext -bbox -nopgbrk WORK.PDF -" ,$ans);

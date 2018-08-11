@@ -14,10 +14,10 @@ excludes = ['2016','2017','2018','2019','SP2','07152']
 db = pymysql.connect(host='127.0.0.1',user='root',password='password',db='docs')
 c = db.cursor()
 
-#e = c.execute("select * from apdocs where posted is not null and supplierid = '21809' order by editdate")
-e = c.execute("select * from apdocs where posted is not null order by editdate")
+#e = c.execute("select * from apdocs where posted is not null and supplierid = '61606' order by editdate")
+e = c.execute("select * from apdocs where posted is not null and doctype in ('C','I','S') order by editdate")
 precoded = c.fetchall()
-#e = c.execute("select * from apdocs where posted is null and itemid = 538605")
+#e = c.execute("select * from apdocs where posted is null and itemid = 537444")
 e = c.execute("select * from apdocs where posted is null")
 uncoded = c.fetchall()
 
@@ -117,7 +117,6 @@ def stampsplits():
    if ans == 'split':
     ps.append(p+1)
   sql = "update apdocs set otherjson=JSON_SET(otherjson,'$.ps',JSON_ARRAY("+','.join(map(str,ps))+")) where itemid = '"+str(rec[0])+"'"
-  print(sql)
   a = c.execute(sql)
   db.commit()
  c.close()
@@ -161,6 +160,7 @@ def makefeatdic():
       nk =dicid+'|'+str(featureid)+'|'+x 
       dic[nk] = dic[nk]+1 if nk in dic else 1
      p = text.find(targetfeature,p+1)
+
  return dic,lastrec
 
 def stampfeatures():
@@ -173,10 +173,14 @@ def stampfeatures():
    continue
   wordset = makebigrams(text)
   bestclass,bestclassarray = guessclass(wordset,classcorpus)
+#  print(rec[0],bestclass)
   dicid = bestclass
   splittext = text.split()
   splittextlength = len(splittext)
   bests = {15:{},16:{},17:{},18:{},19:{},20:{}}
+  naturalpo = re.search('\\b[^ ]*P(O|0).\\d{2,6}',text,re.IGNORECASE)
+  if naturalpo:
+   bests[16]['0|0|'+naturalpo.group(0)] = 1000
   for targetlength in range(0,4):
    for p in range(0,splittextlength-targetlength):
     poskeys = getallkeys(p,targetlength+1,splittextlength,splittext)
@@ -190,7 +194,7 @@ def stampfeatures():
       cnt += dic[dicid+'|15|'+v] if dicid+'|15|'+v in dic else 0
      bests[15][targetkey] = cnt
     # Purchase Order
-    if re.match('.*\\d.*',targetword):
+    if 1==1:
      cnt = 0
      for v in poskeys:
       cnt += dic[dicid+'|16|'+v] if dicid+'|16|'+v in dic else 0
@@ -232,7 +236,8 @@ def stampfeatures():
     best = sorted(bests[b],key=bests[b].get,reverse=True)
     targetpos = int(best[0].split('|')[0])
     targetlength = int(best[0].split('|')[1])
-    v = " ".join(splittext[targetpos:targetpos+targetlength])
+#    v = " ".join(splittext[targetpos:targetpos+targetlength])
+    v = best[0].split('|')[2]
     sql = "update apdocs set otherjson=JSON_SET(otherjson,'$.f_"+str(b)+"',\""+v+"\") where itemid = '"+str(rec[0])+"'"
     a = c.execute(sql)
     db.commit()
@@ -251,14 +256,13 @@ def stampinvoiceno():
  db.close()
 
 
-#stampsplits()
+stampsplits()
 classcorpus = makeclasscorpus()
 dic,lastrec = makefeatdic()
 
 stampfeatures()
 
 #TODO. On click of field, need to retain space into feature box.
-# Barwick not working
-# F & P Not being classified
 # Credit note and invoice value direction rules + and -
 # Two fields for goods for Bristan and also discount
+# Categorization for terms and conds etc.

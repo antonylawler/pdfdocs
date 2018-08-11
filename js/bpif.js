@@ -1,5 +1,5 @@
 function doonload() { // Initial load
-  if (sessionStorage.u)  {  
+ if (sessionStorage.u)  {  
   var cachedresponse = 'CACHE\x14'+sessionStorage.u;
   whoamiresponse(cachedresponse.split("\x14"));
  } else {
@@ -9,6 +9,7 @@ function doonload() { // Initial load
 //TODO. Review whether we should ever add events to individual lines. They always exist inside a table.
 
 function whoamiresponse(response) {
+ console.log(response);
  if (response == 'Connection refused') {
   alert(response);
   return false;
