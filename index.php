@@ -31,7 +31,6 @@
  
  localStorage.setItem('QuickMenu',JSON.stringify(qm));
 
-
 // menu {[Auth level,link,Wording]}
 
 var menu = {
