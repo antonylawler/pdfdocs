@@ -1,21 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-
 <link rel="stylesheet" href="css/w3.css">
 <head>
- <title>PLUMLINK</title>
- <script src="js/bpif.js"></script>
- <script>
-  thisprog = 'login';
-  function logonuser(response) {
-   if (response[0] != 'NOTLOGGEDON') {
-    storeuser(response);
-    window.location = 'menu.php';
-   } else {
-    window.location = 'failedlogin.php';
-   }
-  }
- </script>
+ <title>Failed Login</title>
 </head>
 <body style='background:black'>
 <p style='padding:100px'></p>

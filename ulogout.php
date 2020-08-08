@@ -1,14 +1,15 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<?php
+ session_start();
+ unset($_SESSION["user"]);
+ unset($_SESSION["groups"]);
+ unset($_SESSION["schema"]);
+ setcookie("_u","");
+?>
 <link rel="stylesheet" href="css/w3.css">
 <head>
- <title>BRANDPARTNERS</title>
+ <title>Logout</title>
 </head>
 <body style='background:black'>
-<script>
- sessionStorage.removeItem('u');
- document.cookie = "_u=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
-</script>
 <p style='padding:100px'></p>
 <div class='w3-row'>
  <div class="w3-col m4"><p></p></div>
@@ -18,7 +19,7 @@
   <label>Where do you want to go now ?</label>
   <a class='w3-button w3-block w3-green' href='login.php'>Log Back In</a>
   <p></p>
-  <a class='w3-button w3-block w3-green' href='index.php'>Home Page</a>
+  <a class='w3-button w3-block w3-green' href='newindex.php'>Home Page</a>
   <p></p>
  </div>
 </div>

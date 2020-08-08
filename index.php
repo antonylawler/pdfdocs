@@ -1,70 +1,61 @@
-<!DOCTYPE html>
+<?php
+ require_once ("include.php");
+ $userid = authenticate(1);
+ $username = @$_SESSION['username'];
+?>
+<html>
 <link rel="stylesheet" href="css/w3.css">
 <head>
- <title>AQUATEC</title>
- <script src="js/bpif.js"></script>
+ <title>MAIN MENU</title>
 </head>
-<body style="background:black;color:white;" onload="doonload()">
+<body style="color:white;" onload='doonload()'>
 
 <div class="w3-bar w3-green">
- <div class='w3-bar-item'>AQUATEC</div>
- <a id=signin href="login.php" class="w3-bar-item w3-button">SIGN IN</a>
+ <a class='w3-bar-item'>MAIN MENU</a>
  <div id=usermenu class="w3-dropdown-hover w3-right w3-indigo">
-  <button id=username class="w3-button">X</button>
+  <button id=username class="w3-button"><?php echo $username;?>  </button>
   <div class="w3-dropdown-content w3-bar-block w3-card-4-4">
    <a href="ulogout.php" class="w3-bar-item w3-button">LOGOUT</a>
   </div>
  </div>
 </div>
 
-
 <script>
-var qm =  localStorage.getItem('QuickMenu') ? JSON.parse(localStorage.getItem('QuickMenu')) : [];
+ groups = <?php echo(json_encode(@$_SESSION['groups']))?>;
+ if (!groups) {groups = 'ANON'};
+ qm =  localStorage.getItem('QuickMenu') ? JSON.parse(localStorage.getItem('QuickMenu')) : [];
+
+ for (var i=0;i<qm.length;i++) {
+   if (qm[i][1].search('aplist.php') != -1 || qm[i][1].search('manage.php') != -1 ) {qm.splice(i,1); i -=1 ;}
+ }
+ 
+ localStorage.setItem('QuickMenu',JSON.stringify(qm));
+
+
+// menu {[Auth level,link,Wording]}
+
 var menu = {
  'Quick Menu': qm,
- 'Input':[
-  ['WRITE.ACCOUNTMANAGER','flatcall.php?THISPROG=WRITE.ACCOUNTMANAGER','Account Manager'],
-  ['WRITE.PROJECTMANAGER','flatcall.php?THISPROG=WRITE.PROJECTMANAGER','Project Manager'],
-  ['WRITE.CURRENCY','flatcall.php?THISPROG=WRITE.CURRENCY','Currency Manager'],
-  ['WRITE.JOB','flatcall.php?THISPROG=WRITE.JOB','Job Manager'],
-  ['WRITE.BRANCH','flatcall.php?THISPROG=WRITE.BRANCH','Branch Manager'],
-  ['WRITE.CUSTOMER','flatcall.php?THISPROG=WRITE.CUSTOMER','Customer Manager'],
-  ['WRITE.GL.CHART','flatcall.php?THISPROG=WRITE.GL.CHART','GL Chart Manager'],
-  ['WRITE.GST','flatcall.php?THISPROG=WRITE.GST','GST Manager'],
-  ['WRITE.JOURNAL','flatcall.php?THISPROG=WRITE.JOURNAL','GL Journal'],
-  ['WRITE.SUPPLIER','flatcall.php?THISPROG=WRITE.SUPPLIER','Supplier'],
-  ['WRITE.PROSPECT','flatcall.php?THISPROG=WRITE.PROSPECT','Prospect'],
-  ['WEBINPUT.PGROUP','flatcall.php?THISPROG=WEBINPUT.PGROUP','Product Group Manager'],
-  ['WEBINPUT.PGSECTOR ','flatcall.php?THISPROG=WEBINPUT.PGSECTOR','Product Sector Manager']
- ],
- 'Enquiries':[
-  ['GET.SALES','sales.php','Company Sales'],
-  ['GET.CUSTOMERSALES','customersales.php','Customer Sales'],
-  ['GET.OPERATORSALES','operatorsales.php','Operator Sales'],
-  ['GET.REPSALES','repsales.php','Rep Sales'],
-  ['GET.PGRANGE','pgrange.php','Product Range Sales'],
-  ['GET.PGROUP','pgroup.php','Product Group Sales'],
-  ['GET.QCOLLECTION','qcollection.php','Quarterly Collection'],
-  ['SHOW.TB','showtb.php?THISPROG=SHOW.TB','Show TB'],
-  ['WRITE.PLEDGER','inputpledger.php','Supplier Invoice'],
-  ['SHOW.PROSPECT','showprospect.php','Show prospect tree'],
-  ['SHOW.PROSPECTTABLE','showprospecttable.php','Show prospect table'],
-  ['ENG.AUDIT.DISCOUNT','showdiscountaudit.php','Show discount audit'],
-  ['HTMLSTATEMENT','showstatement.php?THISPROG=HTMLSTATEMENT','Customer Statement'],
-  ['SHOW.EDI.ERRORS','flatcallnoselect.php?THISPROG=SHOW.EDI.ERRORS','Show EDI Errors'],
-  ['SHOW.PLEDGER.QUEUE','flatcallnoselect.php?THISPROG=SHOW.PLEDGER.QUEUE','Show what is currently in the purchase invoice queue']
+ 'ACCOUNTS':[
+  ['OTHER','apsplit.php','Split Docs'],
+  ['OTHER','callglreport.php','Input GL Report Code'],
+  ['OTHER','callglchart.php','Input GL Chart Code'],
+  ['OTHER','callpledger.php','Input AP']
  ]
+
 }
 
 var dv = null ;
 
-function localdodefault(){
- menulist = sessionStorage.u.split('\x14')[3];
+function doonload(){ 
+
  for (id in menu) {
+
   var fs = document.createElement('fieldset');
   fs.id = id;
-  fs.setAttribute('class','w3-round-xlarge');
+  fs.setAttribute('class','w3-round-large');
   var fsn = document.createElement('legend');
+  fsn.setAttribute('class','w3-small w3-teal w3-round w3-card-4 w3-padding');
   fsn.innerHTML = id;
   fs.appendChild(fsn);
   fs.ondragover = function() {event.preventDefault();};
@@ -76,43 +67,42 @@ function localdodefault(){
    var li = document.getElementById('Quick Menu').childNodes;
    for (i=1;i<li.length;i++) {
     if (li[i].parentNode.id == 'Quick Menu') {
-    var ni = [li[i].name,li[i].href,li[i].innerHTML]; 
-    qm.push(ni);
+     var ni = [li[i].name,li[i].href,li[i].innerHTML]; 
+     qm.push(ni);
     }
    }
    localStorage.setItem('QuickMenu',JSON.stringify(qm));
    }
   }
-  for (i=0;i<menu[id].length;i++) {
-   if (menulist && menulist.indexOf(menu[id][i][0]) != -1) {
+
+  for (i=0;i<menu[id].length;i++) {	
+   if (groups.indexOf(menu[id][i][0]) || menu[id][i][0] == 'ANON' || groups.indexOf['ALL']) {
    var a = document.createElement("a");
-   a.setAttribute('class','w3-button w3-border w3-card-4 w3-margin-top w3-margin-left w3-light-gray w3-round');
+   a.setAttribute('class','w3-button  w3-card-2 w3-green w3-round');
+   a.setAttribute('style','padding:5px;margin:5px;');
    a.setAttribute('href',menu[id][i][1]);
    a.innerHTML = menu[id][i][2];
    a.name = menu[id][i][0];
    a.ondragstart = function() {dv = this;};
+
    fs.appendChild(a);
    }
   }
-  document.getElementById('middles').appendChild(fs);
+  var col = document.createElement('div');
+  col.setAttribute('class','w3-col s2 w3-small');
+  col.appendChild(fs);
+  document.getElementById('middles').appendChild(col);
+  
  }
+
 }
+
+
 
 </script>
 <h1 id="thisprog"></h1>
-<div id='middles' class='w3-green'>
-</div>
-<div></div>
-<div id='middles' class='w3-green'>
-<a class='w3-button w3-border w3-card-4 w3-margin-top w3-margin-left w3-light-gray w3-round' href='uploadfile.php'>Upload A File</a>
-<a class='w3-button w3-border w3-card-4 w3-margin-top w3-margin-left w3-light-gray w3-round' href='downloads'>Download an exported File</a>
-</div>
-<div class='w3-green'>
- <a class='w3-button w3-border w3-card-4 w3-margin-top w3-margin-left w3-light-gray w3-round' href='SALES.HTML'>Sales Totals</a>
- <a class='w3-button w3-border w3-card-4 w3-margin-top w3-margin-left w3-light-gray w3-round' href='EMAILFAILS.HTM'>Fax+Email Fails</a>
- <a class='w3-button w3-border w3-card-4 w3-margin-top w3-margin-left w3-light-gray w3-round' href='apsplit.php'>Purchase Invoices Need Splitting</a>
- <a class='w3-button w3-border w3-card-4 w3-margin-top w3-margin-left w3-light-gray w3-round' href='apclassify.php'>Purchase Invoice Check</a>
- 
+<div id='middles' class='w3-row'>
 </div>
 </body>
+
 </html>
