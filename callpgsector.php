@@ -11,12 +11,22 @@
 <?php
 // Implementation Specific
 $sql = "select itemid,name from pgsector where name is not null";
-$ans = sqlreadarray($sql);
+$dblink = getconn();
+$ans = '[';
+$result = mysqli_query($dblink,$sql);
+if ($result) {
+ while($row = mysqli_fetch_row($result)) $ans .= str_replace('\r','',json_encode($row,JSON_UNESCAPED_SLASHES)).',';
+} else {
+ xd("Failed ".mysqli_error($dblink));
+}
+mysqli_close($dblink);
+
+
 ?>
 <script>
 
-var l = <?php echo json_encode($ans);?>;
-localStorage.setItem('select', JSON.stringify(l));
+searchtable = <?php echo (substr($ans,0,-1).']');?>;
+
 function newitem() {
 // Implementation Specific
  top.location.href = 'inputpgsector.php';
@@ -96,7 +106,7 @@ function searchkup(searchtablename,whenclicked) {
   if (event.target.value == '') {
    removesel()
   } else {
-   var searchtable  = JSON.parse(localStorage.getItem(searchtablename));
+//   var searchtable  = JSON.parse(localStorage.getItem(searchtablename));
    filtertable(event.target.value,searchtablename,whenclicked,event.target.id);
   }
  }
@@ -110,7 +120,7 @@ function removesel() {
 
 function filtertable(searchfor,searchtablename,oc,targetid,page) {
  if (!page) page  = 0;
- var searchtable  = JSON.parse(localStorage.getItem(searchtablename));
+// var searchtable  = JSON.parse(localStorage.getItem(searchtablename));
  var o  = document.getElementById('SELECTLIST');
  if (!o) {
   var o = document.createElement('table');

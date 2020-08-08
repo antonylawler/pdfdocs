@@ -188,6 +188,14 @@ function authenticate($prompt = false) {
 return false; 
 }
 
+function authorise($group) {
+ // Actively confirms whether user is currently authorised
+ $groups = @$_SESSION["groups"];
+ if (isset($groups[$group])) return true;
+ if (isset($groups['ALL'])) return true;
+ return false ;
+}
+
 function isauthorised($group) {
  // Passively confirms whether user is currently authorised
  $groups = @$_SESSION["groups"];
